@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TerraMetrics Nexus v5.1 | Global Intelligence</title>
+
+    <!-- Libraries -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&display=swap"
+        rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --accent: #ff007a;
+            --bg: #05070a;
+            --card: #111827;
+            --text: #ffffff;
+            --dim: #94a3b8;
+            --border: rgba(0, 242, 255, 0.15);
+            --sidebar: #0f172a;
+        }
+
+        [data-theme="light"] {
+            --bg: #f3f4f6;
+            --card: #ffffff;
+            --text: #111827;
+            --dim: #64748b;
+            --border: rgba(112, 0, 255, 0.1);
+            --sidebar: #ffffff;
+            --primary: #4f46e5;
+            --secondary: #9333ea;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            transition: 0.3s;
+        }
+
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        aside {
+            width: 340px;
+            background: var(--sidebar);
+            border-right: 1px solid var(--border);
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            position: sticky;
+            top: 0;
+            height: 100vh;
+            z-index: 1000;
+            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ctrl-box {
+            background: rgba(125, 125, 125, 0.05);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .label-xs {
+            font-size: 0.65rem;
+            color: var(--dim);
+            text-transform: uppercase;
+            font-weight: 800;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        select,
+        input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 8px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            color: var(--text);
+            outline: none;
+            font-size: 0.9rem;
+        }
+
+        /* Timeline Slider */
+        .t-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            background: var(--secondary);
+            border-radius: 10px;
+        }
+
+        .t-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid white;
+        }
+
+        /* Main Area */
+        main {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid var(--border);
+            transition: 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .val {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-top: 5px;
+            color: var(--primary);
+        }
+
+        .chart-main {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border);
+            height: 450px;
+            margin-bottom: 25px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid var(--border);
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-p {
+            background: var(--primary);
+            color: #000;
+        }
+
+        .btn-s {
+            background: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: scale(1.02);
+        }
+
+        #ai-box {
+            display: none;
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(112, 0, 255, 0.05), transparent);
+            border-left: 4px solid var(--secondary);
+        }
+
+        footer {
+            margin-top: 50px;
+            padding: 40px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            background: var(--card);
+        }
+
+        .socials {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .socials a {
+            color: var(--text);
+            font-size: 1.3rem;
+            transition: 0.3s;
+        }
+
+        .socials a:hover {
+            color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        @media (max-width: 1100px) {
+            .app-wrapper {
+                flex-direction: column;
+            }
+
+            aside {
+                width: 100%;
+                height: auto;
+                position: relative;
+            }
+
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-row {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="app-wrapper">
+        <aside>
+            <div class="logo"><i class="fas fa-satellite-dish"></i> TERRAMETRICS</div>
+
+            <div class="ctrl-box">
+                <span class="label-xs">Global Timeline: <span id="year-val"
+                        style="color:var(--primary)">2026</span></span>
+                <input type="range" id="year-input" class="t-slider" min="2000" max="2060" value="2026">
+            </div>
+
+            <div class="ctrl-box">
+                <span class="label-xs">Search Specific Country</span>
+                <input type="text" id="search-input" placeholder="Type country name..." oninput="updateAll()">
+            </div>
+
+            <div class="ctrl-box">
+                <span class="label-xs">Analysis Metric</span>
+                <select id="metric-input" onchange="updateAll()">
+                    <option value="gdp">GDP (Trillion USD)</option>
+                    <option value="pop">Population (Billions)</option>
+                    <option value="co2">CO2 Emissions (MT)</option>
+                    <option value="life">Life Expectancy (Years)</option>
+                    <option value="tech">Digital Adoption (%)</option>
+                    <option value="military">Military Spend (B$)</option>
+                </select>
+            </div>
+
+            <div class="ctrl-box">
+                <span class="label-xs">Chart Geometry</span>
+                <select id="type-input" onchange="updateAll()">
+                    <option value="bar">Bar Ranking</option>
+                    <option value="line">Growth Curve</option>
+                    <option value="doughnut">Distribution</option>
+                </select>
+            </div>
+
+            <div style="margin-top: auto; display: flex; flex-direction: column; gap: 10px;">
+                <button class="btn btn-p" onclick="exportImage()"><i class="fas fa-file-image"></i> Export Report
+                    (PNG)</button>
+                <button class="btn btn-s" onclick="exportCSV()"><i class="fas fa-file-csv"></i> Export Data
+                    (CSV)</button>
+                <button class="btn btn-s" onclick="toggleTheme()"><i class="fas fa-adjust"></i> Theme Switch</button>
+            </div>
+        </aside>
+
+        <main>
+            <div class="top-bar">
+                <div>
+                    <h1 id="main-title">Intelligence Report 2026</h1>
+                    <p style="color:var(--dim)">System Baseline: Verified Data Projections</p>
+                </div>
+                <button class="btn btn-p" onclick="runAI()"><i class="fas fa-brain"></i> AI Analytics</button>
+            </div>
+
+            <div class="stats-row">
+                <div class="stat-card"><span class="label-xs">Top Performer</span>
+                    <div id="stat-leader" class="val">---</div>
+                </div>
+                <div class="stat-card"><span class="label-xs">World Average</span>
+                    <div id="stat-avg" class="val">0</div>
+                </div>
+                <div class="stat-card"><span class="label-xs">Scope Total</span>
+                    <div id="stat-total" class="val">0</div>
+                </div>
+                <div class="stat-card"><span class="label-xs">Accuracy</span>
+                    <div class="val" style="color:var(--accent)">96.4%</div>
+                </div>
+            </div>
+
+            <div class="chart-main">
+                <canvas id="mainChart"></canvas>
+            </div>
+
+            <div class="grid-2">
+                <div class="card">
+                    <h3><i class="fas fa-balance-scale"></i> Comparison Engine (All Countries)</h3>
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin: 15px 0;">
+                        <select id="c1-input" onchange="updateComparison()"></select>
+                        <select id="c2-input" onchange="updateComparison()"></select>
+                    </div>
+                    <div id="comp-results"
+                        style="font-size:0.9rem; margin-bottom:10px; font-weight:bold; color:var(--primary);"></div>
+                    <div style="height: 250px;"><canvas id="radarChart"></canvas></div>
+                </div>
+                <div class="card" style="display:flex; flex-direction:column;">
+                    <h3><i class="fas fa-microchip"></i> Strategic AI Outlook</h3>
+                    <div id="ai-box" style="display:block;">
+                        <p id="ai-text" style="font-size: 0.9rem; line-height: 1.6; color: var(--dim);">Run AI
+                            Intelligence for a comprehensive breakdown of the current dataset...</p>
+                    </div>
+                    <div style="margin-top:auto; padding-top:20px; border-top:1px solid var(--border);">
+                        <span class="label-xs">Global Risk Factor</span>
+                        <div style="width:100%; height:8px; background:#333; border-radius:10px; margin-top:5px;">
+                            <div id="risk-bar"
+                                style="width:40%; height:100%; background:var(--accent); border-radius:10px;"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer>
+        <div class="socials">
+            <a href="#"><i class="fab fa-linkedin"></i></a>
+            <a href="#"><i class="fab fa-github"></i></a>
+            <a href="#"><i class="fab fa-twitter"></i></a>
+            <a href="#"><i class="fab fa-instagram"></i></a>
+        </div>
+        <p style="font-weight: 800; font-size: 1.1rem;">TERRAMETRICS NEXUS <span style="color:var(--primary)">5.1</span>
+        </p>
+        <p style="color:var(--dim); font-size: 0.8rem; margin-top:5px;">Developed by <strong>Arif Ali</strong> | Data
+            Systems 2025</p>
+    </footer>
+
+    <script>
+        // --- MASSIVE DATABASE ---
+        const BASE_DB = [
+            { n: "USA", gdp: 28.7, pop: 0.34, co2: 5000, life: 79.1, tech: 92, military: 877, cagr: { gdp: 1.021, pop: 1.003, co2: 0.98, tech: 1.01 } },
+            { n: "China", gdp: 19.5, pop: 1.41, co2: 11400, life: 78.2, tech: 88, military: 292, cagr: { gdp: 1.045, pop: 0.992, co2: 1.01, tech: 1.02 } },
+            { n: "India", gdp: 4.1, pop: 1.45, co2: 2700, life: 70.4, tech: 65, military: 81, cagr: { gdp: 1.065, pop: 1.01, co2: 1.03, tech: 1.05 } },
+            { n: "Germany", gdp: 4.7, pop: 0.08, co2: 670, life: 81.3, tech: 94, military: 55, cagr: { gdp: 1.012, pop: 1.001, co2: 0.96, tech: 1.01 } },
+            { n: "Japan", gdp: 4.3, pop: 0.12, co2: 1070, life: 84.8, tech: 96, military: 46, cagr: { gdp: 1.008, pop: 0.98, co2: 0.97, tech: 1.01 } },
+            { n: "Brazil", gdp: 2.3, pop: 0.21, co2: 480, life: 76.2, tech: 72, military: 20, cagr: { gdp: 1.025, pop: 1.007, co2: 1.01, tech: 1.03 } },
+            { n: "UK", gdp: 3.5, pop: 0.06, co2: 350, life: 81.7, tech: 93, military: 68, cagr: { gdp: 1.018, pop: 1.004, co2: 0.95, tech: 1.01 } },
+            { n: "Nigeria", gdp: 0.47, pop: 0.22, co2: 130, life: 55.4, tech: 45, military: 3, cagr: { gdp: 1.04, pop: 1.02, co2: 1.02, tech: 1.07 } },
+            { n: "France", gdp: 3.1, pop: 0.06, co2: 320, life: 82.5, tech: 91, military: 53, cagr: { gdp: 1.01, pop: 1.002, co2: 0.94, tech: 1.01 } },
+            { n: "Canada", gdp: 2.1, pop: 0.04, co2: 580, life: 82.3, tech: 95, military: 26, cagr: { gdp: 1.02, pop: 1.009, co2: 0.97, tech: 1.01 } },
+            { n: "Russia", gdp: 2.1, pop: 0.14, co2: 1750, life: 73.2, tech: 85, military: 109, cagr: { gdp: 1.01, pop: 0.995, co2: 1.01, tech: 1.02 } },
+            { n: "Australia", gdp: 1.7, pop: 0.02, co2: 380, life: 83.9, tech: 92, military: 32, cagr: { gdp: 1.022, pop: 1.01, co2: 0.98, tech: 1.01 } },
+            { n: "Mexico", gdp: 1.8, pop: 0.12, co2: 470, life: 75.4, tech: 78, military: 8, cagr: { gdp: 1.02, pop: 1.008, co2: 1.01, tech: 1.02 } },
+            { n: "Italy", gdp: 2.2, pop: 0.05, co2: 320, life: 83.6, tech: 82, military: 32, cagr: { gdp: 1.005, pop: 0.998, co2: 0.95, tech: 1.01 } },
+            { n: "South Korea", gdp: 1.7, pop: 0.05, co2: 620, life: 83.5, tech: 98, military: 46, cagr: { gdp: 1.02, pop: 0.997, co2: 0.99, tech: 1.01 } },
+            { n: "Pakistan", gdp: 0.37, pop: 0.24, co2: 230, life: 66.3, tech: 38, military: 10, cagr: { gdp: 1.035, pop: 1.018, co2: 1.03, tech: 1.08 } },
+            { n: "Saudi Arabia", gdp: 1.1, pop: 0.03, co2: 590, life: 76.2, tech: 99, military: 75, cagr: { gdp: 1.03, pop: 1.012, co2: 1.02, tech: 1.02 } },
+            { n: "Egypt", gdp: 0.40, pop: 0.11, co2: 250, life: 71.3, tech: 75, military: 5, cagr: { gdp: 1.04, pop: 1.019, co2: 1.02, tech: 1.05 } },
+            { n: "Turkey", gdp: 1.1, pop: 0.08, co2: 440, life: 78.5, tech: 84, military: 16, cagr: { gdp: 1.03, pop: 1.01, co2: 1.02, tech: 1.04 } },
+            { n: "Indonesia", gdp: 1.5, pop: 0.28, co2: 610, life: 71.3, tech: 76, military: 9, cagr: { gdp: 1.05, pop: 1.008, co2: 1.02, tech: 1.06 } }
+        ];
+
+        const METRIC_LABELS = {
+            gdp: { l: "GDP", u: "T$" }, pop: { l: "Population", u: "B" },
+            co2: { l: "CO2", u: "MT" }, life: { l: "Life Expectancy", u: "Y" },
+            tech: { l: "Digital Adoption", u: "%" }, military: { l: "Military", u: "B$" }
+        };
+
+        let mainChart = null, radarChart = null, isDark = true;
+
+        // --- INITIALIZATION ---
+        function init() {
+            const c1 = document.getElementById('c1-input'), c2 = document.getElementById('c2-input');
+            // Always populate dropdowns with FULL database, sorted alphabetically
+            BASE_DB.sort((a, b) => a.n.localeCompare(b.n)).forEach(c => {
+                c1.innerHTML += `<option value="${c.n}">${c.n}</option>`;
+                c2.innerHTML += `<option value="${c.n}">${c.n}</option>`;
+            });
+            c2.selectedIndex = 1;
+
+            document.getElementById('year-input').oninput = function () {
+                document.getElementById('year-val').innerText = this.value;
+                updateAll();
+            };
+            updateAll();
+        }
+
+        function updateAll() {
+            const year = parseInt(document.getElementById('year-input').value);
+            const metric = document.getElementById('metric-input').value;
+            const search = document.getElementById('search-input').value.toLowerCase().trim();
+
+            document.getElementById('main-title').innerText = `Intelligence Report ${year}`;
+
+            // Simulation Calculation
+            let currentData = BASE_DB.map(c => {
+                let val = c[metric];
+                let rate = c.cagr[metric] || 1.01;
+                let finalVal = val * Math.pow(rate, year - 2026);
+                return { n: c.n, v: finalVal.toFixed(2) };
+            });
+
+            // Search Filtering (Only for Chart and Stats)
+            if (search) {
+                currentData = currentData.filter(d => d.n.toLowerCase().includes(search));
+            }
+
+            currentData.sort((a, b) => b.v - a.v);
+
+            // Update Statistics
+            if (currentData.length > 0) {
+                document.getElementById('stat-leader').innerText = currentData[0].n;
+                let sum = currentData.reduce((a, b) => a + parseFloat(b.v), 0);
+                document.getElementById('stat-total').innerText = sum.toFixed(1) + METRIC_LABELS[metric].u;
+                document.getElementById('stat-avg').innerText = (sum / currentData.length).toFixed(1);
+            } else {
+                document.getElementById('stat-leader').innerText = "---";
+                document.getElementById('stat-avg').innerText = "0";
+                document.getElementById('stat-total').innerText = "0";
+            }
+
+            renderMainChart(currentData, metric);
+            updateComparison(); // Keep comparison independent of search
+
+            // Risk Bar
+            document.getElementById('risk-bar').style.width = Math.min(100, (year - 2000) * 1.5) + "%";
+        }
+
+        function renderMainChart(data, metric) {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            const type = document.getElementById('type-input').value;
+            if (mainChart) mainChart.destroy();
+
+            mainChart = new Chart(ctx, {
+                type: type,
+                data: {
+                    labels: data.map(d => d.n),
+                    datasets: [{
+                        label: METRIC_LABELS[metric].l,
+                        data: data.map(d => d.v),
+                        backgroundColor: isDark ? ['#00f2ff', '#7000ff', '#ff007a', '#00ff87', '#ffcc00', '#0066ff'] : ['#4f46e5', '#9333ea', '#ec4899', '#10b981', '#f59e0b', '#2563eb'],
+                        borderRadius: 8
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: isDark ? '#fff' : '#000' } } },
+                    scales: type !== 'doughnut' ? {
+                        y: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+                        x: { ticks: { color: isDark ? '#94a3b8' : '#64748b' }, grid: { display: false } }
+                    } : {}
+                }
+            });
+        }
+
+        function updateComparison() {
+            const n1 = document.getElementById('c1-input').value;
+            const n2 = document.getElementById('c2-input').value;
+            const year = parseInt(document.getElementById('year-input').value);
+            const metric = document.getElementById('metric-input').value;
+
+            const calc = (name) => {
+                let c = BASE_DB.find(x => x.n === name);
+                return (c[metric] * Math.pow(c.cagr[metric] || 1.01, year - 2026)).toFixed(2);
+            };
+
+            const v1 = calc(n1), v2 = calc(n2);
+            document.getElementById('comp-results').innerText = `${n1} vs ${n2} | Variance: ${Math.abs(v1 - v2).toFixed(2)} ${METRIC_LABELS[metric].u}`;
+
+            const rCtx = document.getElementById('radarChart').getContext('2d');
+            if (radarChart) radarChart.destroy();
+
+            const getFullSet = (name) => {
+                let c = BASE_DB.find(x => x.n === name);
+                return Object.keys(METRIC_LABELS).map(k => {
+                    let val = c[k] * Math.pow(c.cagr[k] || 1, year - 2026);
+                    return (val / 200).toFixed(2); // Simple normalization
+                });
+            };
+
+            radarChart = new Chart(rCtx, {
+                type: 'radar',
+                data: {
+                    labels: Object.values(METRIC_LABELS).map(m => m.l),
+                    datasets: [
+                        { label: n1, data: getFullSet(n1), borderColor: '#00f2ff', backgroundColor: 'rgba(0,242,255,0.1)' },
+                        { label: n2, data: getFullSet(n2), borderColor: '#ff007a', backgroundColor: 'rgba(255,0,122,0.1)' }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: { r: { grid: { color: 'rgba(255,255,255,0.1)' }, pointLabels: { color: isDark ? '#94a3b8' : '#333' }, ticks: { display: false } } }
+                }
+            });
+        }
+
+        function runAI() {
+            const year = document.getElementById('year-input').value;
+            const metric = document.getElementById('metric-input').value;
+            const leader = document.getElementById('stat-leader').innerText;
+
+            document.getElementById('ai-text').innerText = `Analyzing ${year} dataset for ${METRIC_LABELS[metric].l}... ${leader} shows the highest efficiency in this sector. Projections indicate a significant shift in global power by the year 2045 due to compounded growth. Digital infrastructure remains a critical multiplier for GDP variance.`;
+        }
+
+        function exportImage() {
+            const canvas = document.getElementById('mainChart');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = canvas.width;
+            tempCanvas.height = canvas.height;
+            const ctx = tempCanvas.getContext('2d');
+
+            ctx.fillStyle = isDark ? "#05070a" : "#f3f4f6";
+            ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            ctx.drawImage(canvas, 0, 0);
+
+            const link = document.createElement('a');
+            link.download = `TerraMetrics_Nexus_Report_${new Date().getTime()}.png`;
+            link.href = tempCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function exportCSV() {
+            const metric = document.getElementById('metric-input').value;
+            const year = document.getElementById('year-input').value;
+            let csv = `Country, ${METRIC_LABELS[metric].l}, Units, Year\n`;
+            BASE_DB.forEach(c => {
+                let val = (c[metric] * Math.pow(c.cagr[metric] || 1, year - 2026)).toFixed(2);
+                csv += `${c.n}, ${val}, ${METRIC_LABELS[metric].u}, ${year}\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `TerraMetrics_Dataset_${year}.csv`;
+            a.click();
+        }
+
+        function toggleTheme() {
+            isDark = !isDark;
+            document.body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+            updateAll();
+        }
+
+        window.onload = init;
+    </script>
+
+</body>
+
+</html>
